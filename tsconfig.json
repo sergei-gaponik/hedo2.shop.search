@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "declaration": true,
+    "outDir": "./dist",
+    "target": "es2018",
+    "module": "commonjs", 
+    "lib": ["ES2019"],
+    "paths": {
+      "@sergei-gaponik/hedo2.lib.models": [ "../../_lib/models" ],
+      "@sergei-gaponik/hedo2.lib.util": [ "../../_lib/util" ]
+    }
+  },
+  "include": [ "src/*" ],
+  "exclude": [ "node_modules", "**/*.spec.ts", "build" ]
+}

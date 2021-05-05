@@ -1,0 +1,41 @@
+{
+  "scripts": {
+    "watch": "tsc -w",
+    "start": "ts-node src/app.ts",
+    "inspect": "node --inspect -r ts-node/register src/app.ts"
+  },
+  "dependencies": {
+    "colors": "^1.4.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "module-alias": "^2.2.2",
+    "mongoose": "^5.12.5",
+    "node-fetch": "^2.6.1",
+    "redis": "^3.1.1",
+    "reflect-metadata": "^0.1.13",
+    "type-graphql": "^1.1.1",
+    "urql": "^2.0.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.11",
+    "@types/md5": "^2.3.0",
+    "@types/mongoose": "^5.10.5",
+    "@types/node": "^14.14.35",
+    "@types/node-fetch": "^2.5.7",
+    "@types/redis": "^2.8.28"
+  },
+  "name": "hedo2.shop.search",
+  "description": "",
+  "version": "1.0.0",
+  "main": "src/app.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sergei-gaponik/hedo2.shop.search.git"
+  },
+  "author": "HEDO Beauty",
+  "license": "UNLICENSED",
+  "_moduleAliases": {
+    "@sergei-gaponik/hedo2.lib.models": "../../_lib/models/dist/app.js",
+    "@sergei-gaponik/hedo2.lib.util": "../../_lib/util/dist/app.js"
+  }
+}

@@ -1,8 +1,10 @@
 
-import * as _global from '../global/global'
+import * as _globalQueries from '../api/globalQueries'
+import * as _indexProducts from '../api/indexProducts'
 
 const routes = {
-  ..._global
+  ..._globalQueries,
+  ..._indexProducts
 }
 
 export default routes

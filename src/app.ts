@@ -2,16 +2,19 @@ require("module-alias/register")
 require("reflect-metadata")
 require("dotenv").config()
 
+import 'isomorphic-fetch'
 import * as Mongoose from 'mongoose'
-import * as express from 'express'
+import fastify from 'fastify'
 import * as path from 'path'
-import * as https from 'https'
 import * as urql from "@urql/core"
 import * as fs from 'fs'
 import { cyan, bold, yellow, blue} from 'colors/safe'
 import { setContext } from './core/context'
 import handler from './core/handler'
 import { PRODUCTION, VERSION } from './core/const'
+import { setLoggerContext } from '@sergei-gaponik/hedo2.lib.util'
+import scheduler from './core/scheduler'
+import * as es from '@elastic/elasticsearch'
 
 async function main() {
 
@@ -30,25 +33,48 @@ async function main() {
   
   const mongoose = await Mongoose.connect(MONGODB_SEARCH, mongooseOptions)
 
+  if(!PRODUCTION && process.argv.includes("mdebug")) 
+    Mongoose.set('debug', true);
+
+  console.log("connecting to elastic search...")
+
+  const esClient = new es.Client({
+    node: process.env.ES_ENDPOINT,
+    auth: { 
+      username: process.env.ES_USER, 
+      password: process.env.ES_PASSWORD 
+    }
+  })
+
+  const esResponse = await esClient.info()
+
+  if(esResponse.statusCode != 200 || process.argv.includes("esstatus"))
+    console.log(esResponse)
+
+  if(esResponse.statusCode != 200)
+    throw new Error();
+
   console.log("initializing graphql...")
 
   const urqlClient = urql.createClient({ url: SYSTEM_API_ENDPOINT })
 
-  setContext({ mongoose, urqlClient })
+  setContext({ mongoose, urqlClient, esClient })
+  setLoggerContext(process.env.LOGGER_ENDPOINT, process.env.LOGGER_SECRET, "shop_search")
 
-  const app = express()
+  scheduler()
 
-  app.use(express.json())
-  app.post('/api', (req, res) => handler(req, res))
+  const app = fastify({
+    https: {
+      key: fs.readFileSync(path.join(__dirname, '../.ssl/localhost-key.pem')),
+      cert: fs.readFileSync(path.join(__dirname, '../.ssl/localhost.pem'))
+    }
+  })
 
-  const sslApp = https.createServer({
-    key: fs.readFileSync(path.join(__dirname, '../.ssl/localhost-key.pem')),
-    cert: fs.readFileSync(path.join(__dirname, '../.ssl/localhost.pem'))
-  }, app)
+  app.post('/api', (req, reply) => handler(req, reply))
 
-  sslApp.listen(PORT, () => {
+  app.listen(PORT, () => {
     console.log(`\napp running on ${cyan(`https://${HOST}:${PORT}`)}`)
-    console.log(`api endpoint ${cyan(`https://${HOST}:${PORT}/api`)}`)
+    console.log(`api endpoint ${cyan(`https://${HOST}:${PORT}/api`)}\n`)
   })
 }
 

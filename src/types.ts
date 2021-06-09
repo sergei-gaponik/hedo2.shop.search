@@ -16,7 +16,7 @@ export enum SearchResponseOrigin {
 
 
 export interface SearchRequest {
-  path: string
+  path?: string
   token?: string
   args?: any
 }

@@ -1,6 +1,6 @@
 import { scheduleJob } from 'node-schedule'
 import { log } from '@sergei-gaponik/hedo2.lib.util'
-import { indexProducts } from '../api/indexProducts'
+import { indexProducts } from '../update/products'
 
 const routines = []
 

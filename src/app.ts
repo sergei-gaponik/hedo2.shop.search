@@ -70,6 +70,8 @@ async function main() {
     }
   })
 
+  app.register(require('fastify-cors'), { origin: "*" })
+
   app.post('/api', (req, reply) => handler(req, reply))
 
   app.listen(PORT, () => {

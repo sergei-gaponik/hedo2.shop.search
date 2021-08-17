@@ -29,6 +29,5 @@ export default async function handler(req: FastifyRequest, reply: FastifyReply){
   })()
 
   reply.code(200)
-    .header('Content-Type', 'application/json; charset=utf-8')
-    .send(_r)
+    .header('Content-Type', 'application/json; charset=utf-8')    .send(_r)
 }

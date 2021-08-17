@@ -82,6 +82,12 @@ const keywordMatchesProperties = (keyword, properties) => {
   return false;
 }
 
+const getElasticProperties = properties => {
+  return properties
+    .filter(p => p.value == "true" && p.property.dataType == "boolean")
+    .map(p => p.property._id)
+}
+
 async function indexProducts(args): Promise<SearchResponse> {
 
   let response: SearchResponse = {};
@@ -96,8 +102,16 @@ async function indexProducts(args): Promise<SearchResponse> {
       products(dereference: true, limit: $limit, page: $page) {
         _id
         name
-        series
-        brand
+        series {
+          _id
+          handle
+          name
+        }
+        brand {
+          _id
+          handle
+          name
+        }
         variants {
           title
           items {
@@ -109,8 +123,14 @@ async function indexProducts(args): Promise<SearchResponse> {
         properties {
           property {
             _id
+            dataType
+            name
+            handle
           }
           value
+        }
+        ingredients {
+          _id
         }
       }
     }
@@ -134,12 +154,25 @@ async function indexProducts(args): Promise<SearchResponse> {
     }
   `
 
-  const [ products, productKeywords ] = await Promise.all([
+  const getProductIngredients = `
+    query GetProductIngredients($limit: Float!, $page: Float!){
+      productIngredients(limit: $limit, page: $page) {
+        _id
+        name
+        keywordsIfPresent
+        keywordsIfNotPresent
+      }
+    }
+  `
+
+  const [ products, productKeywords, productIngredients ] = await Promise.all([
     queryAll(getProductsForIndexing, 200, "products"),
-    queryAll(getProductKeywords, 200, "productKeywords")
+    queryAll(getProductKeywords, 200, "productKeywords"),
+    queryAll(getProductIngredients, 200, "productIngredients")
   ])
 
-  if(!products?.length || !productKeywords?.length) throw new Error();
+  if(!products?.length) 
+    throw new Error();
 
   const esProducts = products.map(product => {
     
@@ -161,23 +194,46 @@ async function indexProducts(args): Promise<SearchResponse> {
       return acc;
     }, [])
 
+    const ingredients = productIngredients.flatMap(ingredient => {
+
+      if(product.ingredients.find(a => a._id == ingredient._id.toString()))
+        return ingredient.keywordsIfPresent
+      else
+        return ingredient.keywordsIfNotPresent
+    })
+
     const variantTitles = product.variants.map(v => v.title)
 
-    const title = `${product.brand} ${product.series || ""} ${product.name}`
+    const title = `${product.brand.name} ${product.series?.name || ""} ${product.name}`
+
+    const properties = getElasticProperties(product.properties)
 
     return {
       id: product._id,
       name: product.name,
-      series: product.series,
-      brand: product.brand,
+      series: product.series?.name || "",
+      brand: product.brand.name,
+      seriesHandle: product.series?.handle || "",
+      brandHandle: product.brand.handle,
       title,
       variantTitles,
       eans,
-      keywords
+      keywords,
+      properties,
+      ingredients
     }
   })
 
+  const r = await context().esClient.deleteByQuery({
+    index: "products",
+    body: {
+      query: {
+        match_all: {}
+      }
+    }
+  })
 
+  console.log(r)
   const stepSize = 20
 
   for(let i = 0; true; i += stepSize){

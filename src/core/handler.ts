@@ -2,7 +2,27 @@ import routes from './routes'
 import { FastifyRequest, FastifyReply } from 'fastify'
 import { SearchRequestError, SearchRequest, SearchResponse } from '../types'
 
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+const _handler = async (body: SearchRequest): Promise<SearchResponse> => {
+
+  let args: any = body.args || {}
+    
+  if(!routes.hasOwnProperty(body.path))
+    return { errors: [ SearchRequestError.pathNotFound ] }
+  
+  try{
+    return await routes[body.path](args);
+  }
+  catch(e){
+    console.log(e)
+    return { errors: [ SearchRequestError.internalServerError ]};
+  }
+}
+
 export default async function handler(req: FastifyRequest, reply: FastifyReply){
+
+  await sleep(200)
 
   const _r = await (async (): Promise<SearchResponse> => {
     
@@ -10,21 +30,16 @@ export default async function handler(req: FastifyRequest, reply: FastifyReply){
       return { errors: [ SearchRequestError.wrongContentType ] }
     
     const body: SearchRequest = req.body
-    
-    let args: any = body.args || {}
-    
-    if(!routes.hasOwnProperty(body.path))
-      return { errors: [ SearchRequestError.pathNotFound ] }
-    
-    args.authorized = req.headers["authorization"] == `Bearer ${process.env.SECRET_KEY}`
 
-    try{
-      return await routes[body.path](args);
+    if(body.bulk){
+      
+      const r = await Promise.all(body.bulk.map(req => _handler(req)))
+
+      return { bulk: r }
     }
-    catch(e){
-      console.log(e)
-      return { errors: [ SearchRequestError.internalServerError ]};
-    }
+    
+    return _handler(body)
+    
 
   })()
 

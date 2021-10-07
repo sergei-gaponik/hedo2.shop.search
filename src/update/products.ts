@@ -1,101 +1,12 @@
 import { SearchRequestError, SearchResponse } from "../types";
 import { context } from '../core/context'
+import { queryAll } from '@sergei-gaponik/hedo2.lib.util'
+import { clearCache } from '../core/esHandler'
+import { keywordMatchesProperties, getElasticProperties } from '../util/keywords'
+import esIndex from '../core/esIndex'
 
-const queryAll = async (gql, limit, dataKey) => {
 
-  let page = 1
-  let data = []
-
-  while(true){
-
-    let gqlResponse = null;
-
-    const queryArgs = { page, limit }
-
-    gqlResponse = await context().urqlClient.query(gql, queryArgs).toPromise()
-
-    if(gqlResponse.error || !gqlResponse.data) {
-      console.log(gqlResponse)
-      throw new Error()
-    }
-
-    const _data = gqlResponse.data[dataKey]
-
-    data = data.concat(_data) 
-
-    if(_data.length < limit) break;
-
-    page++
-  }
-
-  return data;
-}
-
-const keywordConditionMatchesProperty = (condition, value) => {
-
-  switch(condition.operator){
-    case "eq":
-      return value == condition.value;
-    case "ne":
-      return value != condition.value;
-    case "lt":
-      return parseFloat(value) < parseFloat(condition.value);
-    case "gt":
-      return parseFloat(value) > parseFloat(condition.value);
-    case "lte":
-      return parseFloat(value) <= parseFloat(condition.value);
-    case "gte":
-      return parseFloat(value) >= parseFloat(condition.value);
-    case "contains":
-      return condition.value?.includes(value) || false;
-  }
-
-}
-
-const keywordMatchesProperties = (keyword, properties) => {
-
-  if(keyword.conditionLogic == "and"){
-    
-    for(const condition of keyword.conditions){
-
-      const _pid = condition.property._id.toString()
-      const property = properties.find(p => p.property._id == _pid)
-
-      if(!property || !keywordConditionMatchesProperty(condition, property.value))
-        return false;
-    }
-
-    return true;
-  }
-  else if(keyword.conditionLogic == "or"){
-
-    for(const condition of keyword.conditions){
-
-      const _pid = condition.property._id.toString()
-      const property = properties.find(p => p.property._id == _pid)
-
-      if(property && keywordConditionMatchesProperty(condition, property.value))
-        return true;
-    }
-  }
-
-  return false;
-}
-
-const getElasticProperties = properties => {
-  return properties
-    .filter(p => p.value == "true" && p.property.dataType == "boolean")
-    .map(p => p.property._id)
-}
-
-async function indexProducts(args): Promise<SearchResponse> {
-
-  let response: SearchResponse = {};
-
-  if(!args.authorized){
-    response.errors = [ SearchRequestError.permissionDenied ]
-    return response;
-  }
+export async function indexProducts(args): Promise<SearchResponse> {
 
   const getProductsForIndexing = `
     query GetProductsForIndexing($limit: Float!, $page: Float!){
@@ -166,9 +77,9 @@ async function indexProducts(args): Promise<SearchResponse> {
   `
 
   const [ products, productKeywords, productIngredients ] = await Promise.all([
-    queryAll(getProductsForIndexing, 200, "products"),
-    queryAll(getProductKeywords, 200, "productKeywords"),
-    queryAll(getProductIngredients, 200, "productIngredients")
+    queryAll(process.env.SYSTEM_API_ENDPOINT, getProductsForIndexing, 200, "products"),
+    queryAll(process.env.SYSTEM_API_ENDPOINT, getProductKeywords, 200, "productKeywords"),
+    queryAll(process.env.SYSTEM_API_ENDPOINT, getProductIngredients, 200, "productIngredients")
   ])
 
   if(!products?.length) 
@@ -188,6 +99,8 @@ async function indexProducts(args): Promise<SearchResponse> {
           keywords = keywords.concat(keyword.aliases)
       }
     }
+
+    keywords = [...new Set(keywords)]
 
     const eans = product.variants.reduce((acc, variant) => {
       variant.items.forEach(i => acc.push(i.inventoryItem.ean))
@@ -210,52 +123,23 @@ async function indexProducts(args): Promise<SearchResponse> {
 
     return {
       id: product._id,
-      name: product.name,
-      series: product.series?.name || "",
-      brand: product.brand.name,
-      seriesHandle: product.series?.handle || "",
-      brandHandle: product.brand.handle,
-      title,
-      variantTitles,
-      eans,
-      keywords,
-      properties,
-      ingredients
-    }
-  })
-
-  const r = await context().esClient.deleteByQuery({
-    index: "products",
-    body: {
-      query: {
-        match_all: {}
+      body: {
+        id: product._id,
+        name: product.name,
+        series: product.series?.name || "",
+        brand: product.brand.name,
+        seriesHandle: product.series?.handle || "",
+        brandHandle: product.brand.handle,
+        collections: [],
+        title,
+        variantTitles,
+        eans,
+        keywords,
+        properties,
+        ingredients
       }
     }
   })
 
-  console.log(r)
-  const stepSize = 20
-
-  for(let i = 0; true; i += stepSize){
-
-    const _products = esProducts.slice(i, i + stepSize)
-
-    if(!_products.length) break;
-
-    await Promise.all(_products.map(product => {
-
-      return context().esClient.index({
-        index: "products",
-        id: product.id,
-        body: product
-      })
-    }))
-
-  }
-
-  return response;
-}
-
-export {
-  indexProducts
+  return await esIndex('products', esProducts)
 }

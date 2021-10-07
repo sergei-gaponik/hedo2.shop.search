@@ -1,9 +1,7 @@
-import * as urql from "@urql/core"
 import { Client } from '@elastic/elasticsearch'
 import { Mongoose } from "mongoose"
 
 export interface Context {
-  urqlClient?: urql.Client,
   mongoose?: Mongoose,
   esClient?: Client
 }

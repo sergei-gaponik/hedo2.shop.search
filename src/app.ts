@@ -6,11 +6,11 @@ import 'isomorphic-fetch'
 import * as Mongoose from 'mongoose'
 import fastify from 'fastify'
 import * as path from 'path'
-import * as urql from "@urql/core"
 import * as fs from 'fs'
 import { cyan, bold, yellow, blue} from 'colors/safe'
 import { setContext } from './core/context'
 import handler from './core/handler'
+import systemHandler from './core/systemHandler'
 import { PRODUCTION, VERSION } from './core/const'
 import { setLoggerContext } from '@sergei-gaponik/hedo2.lib.util'
 import scheduler from './core/scheduler'
@@ -21,7 +21,7 @@ async function main() {
   console.log(`${bold(blue("SEARCH API"))} v${VERSION}\n`)
   console.log(`env: ${PRODUCTION ? bold(cyan("PRODUCTION")) : bold(yellow("DEVELOPMENT"))}`)
   
-  const { PORT, SYSTEM_API_ENDPOINT, MONGODB_SEARCH, HOST } = process.env
+  const { PORT, MONGODB_SEARCH, HOST } = process.env
   
   console.log("connecting to mongodb...")
 
@@ -56,9 +56,7 @@ async function main() {
 
   console.log("initializing graphql...")
 
-  const urqlClient = urql.createClient({ url: SYSTEM_API_ENDPOINT })
-
-  setContext({ mongoose, urqlClient, esClient })
+  setContext({ mongoose, esClient })
   setLoggerContext(process.env.LOGGER_ENDPOINT, process.env.LOGGER_SECRET, "shop_search")
 
   scheduler()
@@ -71,12 +69,15 @@ async function main() {
   })
 
   app.register(require('fastify-cors'), { origin: "*" })
+  app.register(require('fastify-compress'))
 
-  app.post('/api', (req, reply) => handler(req, reply))
+  app.post('/api', (req, res) => handler(req, res))
+  app.post('/system', (req, res) => systemHandler(req, res));
 
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`\napp running on ${cyan(`https://${HOST}:${PORT}`)}`)
-    console.log(`api endpoint ${cyan(`https://${HOST}:${PORT}/api`)}\n`)
+    console.log(`api endpoint ${cyan(`https://${HOST}:${PORT}/api`)}`)
+    console.log(`system endpoint ${cyan(`https://${HOST}:${PORT}/system`)}\n`)
   })
 }
 

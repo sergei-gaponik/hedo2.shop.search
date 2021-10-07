@@ -9,20 +9,14 @@ export enum SearchRequestError {
   "wrongContentType" = "wrongContentType"
 }
 
-export enum SearchResponseOrigin {
-  "cached" = "cached",
-  "api" = "api"
-}
-
-
 export interface SearchRequest {
   path?: string
-  token?: string
   args?: any
+  bulk?: SearchRequest[]
 }
 
 export interface SearchResponse {
   errors?: SearchRequestError[]
   data?: any
-  origin?: SearchResponseOrigin
+  bulk?: SearchResponse[]
 }

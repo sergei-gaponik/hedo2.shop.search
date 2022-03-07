@@ -15,7 +15,7 @@ export async function indexBrands(args): Promise<SearchResponse> {
       }
     }
   `
-  const brands = await queryAll(process.env.SYSTEM_API_ENDPOINT, gql, 200, "brands")
+  const brands = await queryAll(gql, 200, "brands")
   
   if(!brands?.length) 
     throw new Error();
@@ -49,7 +49,7 @@ export async function indexSeries(args): Promise<SearchResponse> {
       }
     }
   `
-  const series = await queryAll(process.env.SYSTEM_API_ENDPOINT, gql, 200, "series")
+  const series = await queryAll(gql, 200, "series")
   
   if(!series?.length) 
     throw new Error();

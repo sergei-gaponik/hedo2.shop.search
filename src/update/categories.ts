@@ -42,8 +42,8 @@ export async function indexCategories(args): Promise<SearchResponse> {
   `
 
   const [ categories, productKeywords ] = await Promise.all([
-    queryAll(process.env.SYSTEM_API_ENDPOINT, getCategories, 200, "productCategories"),
-    queryAll(process.env.SYSTEM_API_ENDPOINT, getProductKeywords, 200, "productKeywords")
+    queryAll(getCategories, 200, "productCategories"),
+    queryAll(getProductKeywords, 200, "productKeywords")
   ])
 
 

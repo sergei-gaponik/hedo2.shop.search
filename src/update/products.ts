@@ -77,9 +77,9 @@ export async function indexProducts(args): Promise<SearchResponse> {
   `
 
   const [ products, productKeywords, productIngredients ] = await Promise.all([
-    queryAll(process.env.SYSTEM_API_ENDPOINT, getProductsForIndexing, 200, "products"),
-    queryAll(process.env.SYSTEM_API_ENDPOINT, getProductKeywords, 200, "productKeywords"),
-    queryAll(process.env.SYSTEM_API_ENDPOINT, getProductIngredients, 200, "productIngredients")
+    queryAll(getProductsForIndexing, 200, "products"),
+    queryAll(getProductKeywords, 200, "productKeywords"),
+    queryAll(getProductIngredients, 200, "productIngredients")
   ])
 
   if(!products?.length) 

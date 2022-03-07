@@ -14,7 +14,7 @@ async function indexPages(args): Promise<SearchResponse> {
       }
     }
   `
-  const pages = await queryAll(process.env.SYSTEM_API_ENDPOINT, gql, 200, "pages")
+  const pages = await queryAll(gql, 200, "pages")
   
   if(!pages?.length) 
     throw new Error();

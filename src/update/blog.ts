@@ -15,7 +15,7 @@ export async function indexArticles(args): Promise<SearchResponse> {
       }
     }
   `
-  const articles = await queryAll(process.env.SYSTEM_API_ENDPOINT, gql, 200, "articles")
+  const articles = await queryAll(gql, 200, "articles")
   
   if(!articles?.length) 
     throw new Error();

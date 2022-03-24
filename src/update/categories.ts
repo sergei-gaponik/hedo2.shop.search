@@ -9,8 +9,9 @@ export async function indexCategories(args): Promise<SearchResponse> {
     query GetCategoriesForIndexing($limit: Float!, $page: Float!){
       productCategories(dereference: true, limit: $limit, page: $page) {
         _id
-        name
         title
+        handle
+        name
         andCondition {
           properties {
             _id
@@ -72,7 +73,8 @@ export async function indexCategories(args): Promise<SearchResponse> {
       id: category._id,
       body: {
         id: category._id,
-        name: category.title || category.name,
+        name: category.name,
+        title: category.title,
         keywords,
         handle: category.handle
       }

@@ -12,11 +12,12 @@ import { setContext } from './core/context'
 import handler from './core/handler'
 import systemHandler from './core/systemHandler'
 import { PRODUCTION, VERSION } from './core/const'
-import { setLoggerContext } from '@sergei-gaponik/hedo2.lib.util'
-import scheduler from './core/scheduler'
+import { initConsole } from '@sergei-gaponik/hedo2.lib.util'
 import * as es from '@elastic/elasticsearch'
 
 async function main() {
+
+  initConsole(console)
 
   console.log(`${bold(blue("SEARCH API"))} v${VERSION}\n`)
   console.log(`env: ${PRODUCTION ? bold(cyan("PRODUCTION")) : bold(yellow("DEVELOPMENT"))}`)
@@ -57,9 +58,6 @@ async function main() {
   console.log("initializing graphql...")
 
   setContext({ mongoose, esClient })
-  setLoggerContext(process.env.LOGGER_ENDPOINT, process.env.LOGGER_SECRET, "shop_search")
-
-  scheduler()
 
   const app = fastify({
     https: {
@@ -75,7 +73,7 @@ async function main() {
   app.post('/system', (req, res) => systemHandler(req, res));
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\napp running on ${cyan(`https://${HOST}:${PORT}`)}`)
+    console.log(`app running on ${cyan(`https://${HOST}:${PORT}`)}`)
     console.log(`api endpoint ${cyan(`https://${HOST}:${PORT}/api`)}`)
     console.log(`system endpoint ${cyan(`https://${HOST}:${PORT}/system`)}\n`)
   })

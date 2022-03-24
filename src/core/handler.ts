@@ -1,6 +1,8 @@
 import routes from './routes'
 import { FastifyRequest, FastifyReply } from 'fastify'
 import { SearchRequestError, SearchRequest, SearchResponse } from '../types'
+import { performance } from 'perf_hooks'
+import { crc } from '@sergei-gaponik/hedo2.lib.util'
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -22,7 +24,7 @@ const _handler = async (body: SearchRequest): Promise<SearchResponse> => {
 
 export default async function handler(req: FastifyRequest, reply: FastifyReply){
 
-  await sleep(200)
+  const startTime = performance.now()
 
   const _r = await (async (): Promise<SearchResponse> => {
     
@@ -43,6 +45,21 @@ export default async function handler(req: FastifyRequest, reply: FastifyReply){
 
   })()
 
+  const execTime = Math.round((performance.now() - startTime) * 100) / 100
+
+  let _log: any = { 
+    path: (req.body as any).path || (req.body as any).bulk?.map(a => a.path) || null,
+    execTime,
+    crc: crc(JSON.stringify(req.body)),
+  }
+
+  if(_r.errors)
+    _log.errors = _r.errors
+  
+
+  console.log(_log)
+
   reply.code(200)
-    .header('Content-Type', 'application/json; charset=utf-8')    .send(_r)
+    .header('Content-Type', 'application/json; charset=utf-8')    
+    .send(_r)
 }

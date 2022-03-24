@@ -8,15 +8,20 @@ export async function indexArticles(args): Promise<SearchResponse> {
     query GetArticlesForIndexing($limit: Float!, $page: Float!){
       articles(limit: $limit, page: $page) {
         _id
+        published
         name
         tags
         handle
         body
+        author
+        image {
+          src
+        }
       }
     }
   `
   const articles = await queryAll(gql, 200, "articles")
-  
+
   if(!articles?.length) 
     throw new Error();
 
@@ -24,9 +29,12 @@ export async function indexArticles(args): Promise<SearchResponse> {
     id: article._id,
     body: {
       id: article._id,
+      published: article.published,
       name: article.name,
       tags: article.tags,
       body: article.body,
+      author: article.author,
+      imageSrc: article.image?.src,
       handle: article.handle
     }
   }))

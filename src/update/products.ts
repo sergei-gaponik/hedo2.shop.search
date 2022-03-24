@@ -25,11 +25,6 @@ export async function indexProducts(args): Promise<SearchResponse> {
         }
         variants {
           title
-          items {
-            inventoryItem {
-              ean
-            }
-          }
         }
         properties {
           property {
@@ -100,12 +95,12 @@ export async function indexProducts(args): Promise<SearchResponse> {
       }
     }
 
-    keywords = [...new Set(keywords)]
+    keywords = [ ...new Set(keywords) ]
 
-    const eans = product.variants.reduce((acc, variant) => {
-      variant.items.forEach(i => acc.push(i.inventoryItem.ean))
-      return acc;
-    }, [])
+    // const eans = product.variants.reduce((acc, variant) => {
+    //   variant.items.forEach(i => acc.push(i.inventoryItem.ean))
+    //   return acc;
+    // }, [])
 
     const ingredients = productIngredients.flatMap(ingredient => {
 
@@ -133,7 +128,7 @@ export async function indexProducts(args): Promise<SearchResponse> {
         collections: [],
         title,
         variantTitles,
-        eans,
+        eans: [],
         keywords,
         properties,
         ingredients

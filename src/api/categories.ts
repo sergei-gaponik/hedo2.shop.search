@@ -21,7 +21,7 @@ export async function getCategorySearchResults(args): Promise<SearchResponse> {
     query: { 
       multi_match: {
         query: _query,
-        fields: [ "title", "keywords" ],
+        fields: [ "name", "title", "keywords" ],
         fuzziness: "auto"
       } 
     }

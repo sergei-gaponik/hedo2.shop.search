@@ -4,7 +4,20 @@ import { queryAll } from '@sergei-gaponik/hedo2.lib.util'
 import { clearCache } from '../core/esHandler'
 import { keywordMatchesProperties, getElasticProperties } from '../util/keywords'
 import esIndex from '../core/esIndex'
+import { Variant } from '@sergei-gaponik/hedo2.lib.models'
 
+function getMaxDiscount(variants: Variant[]){
+
+  return variants.reduce((maxDiscount, variant) => {
+    if(!variant.recommendedRetailPrice)
+      return maxDiscount;
+    
+    const _discount = 1 - (variant.price / variant.recommendedRetailPrice)
+
+    if(_discount > maxDiscount)
+      return _discount;
+  }, 0)
+}
 
 export async function indexProducts(args): Promise<SearchResponse> {
 
@@ -12,6 +25,8 @@ export async function indexProducts(args): Promise<SearchResponse> {
     query GetProductsForIndexing($limit: Float!, $page: Float!){
       products(dereference: true, limit: $limit, page: $page) {
         _id
+        _created
+        boost
         name
         series {
           _id
@@ -25,6 +40,9 @@ export async function indexProducts(args): Promise<SearchResponse> {
         }
         variants {
           title
+          ean
+          price
+          recommendedRetailPrice
         }
         properties {
           property {
@@ -97,11 +115,6 @@ export async function indexProducts(args): Promise<SearchResponse> {
 
     keywords = [ ...new Set(keywords) ]
 
-    // const eans = product.variants.reduce((acc, variant) => {
-    //   variant.items.forEach(i => acc.push(i.inventoryItem.ean))
-    //   return acc;
-    // }, [])
-
     const ingredients = productIngredients.flatMap(ingredient => {
 
       if(product.ingredients.find(a => a._id == ingredient._id.toString()))
@@ -111,6 +124,10 @@ export async function indexProducts(args): Promise<SearchResponse> {
     })
 
     const variantTitles = product.variants.map(v => v.title)
+    const eans = product.variants.map(v => v.ean)
+    const price = product.variants.map(v => v.price)
+
+    const discount = getMaxDiscount(product.variants)
 
     const title = `${product.brand.name} ${product.series?.name || ""} ${product.name}`
 
@@ -120,6 +137,8 @@ export async function indexProducts(args): Promise<SearchResponse> {
       id: product._id,
       body: {
         id: product._id,
+        created: product._created,
+        boost: product.boost || 0,
         name: product.name,
         series: product.series?.name || "",
         brand: product.brand.name,
@@ -128,10 +147,12 @@ export async function indexProducts(args): Promise<SearchResponse> {
         collections: [],
         title,
         variantTitles,
-        eans: [],
+        eans,
         keywords,
         properties,
-        ingredients
+        ingredients,
+        price,
+        discount
       }
     }
   })

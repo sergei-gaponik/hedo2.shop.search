@@ -1,0 +1,10 @@
+{
+  "mappings": {
+    "properties": {
+      "aliases": {
+        "type": "text",
+        "analyzer": "german"
+      }
+    }
+  }
+}

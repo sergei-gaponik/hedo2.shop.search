@@ -1,26 +1,30 @@
 import { SearchRequestError, SearchResponse } from "../types";
 import { isValidStringArray } from '@sergei-gaponik/hedo2.lib.util'
 import { esHandler } from '../core/esHandler'
+import Joi = require("joi");
 
 const SEARCH_LIMIT = 10
 
 export async function getArticleSearchResults(args): Promise<SearchResponse> {
 
-  const _query = args.query || null
+  const schema = Joi.object({
+    query: Joi.string().required(),
+    limit: Joi.number().allow(null).integer().min(0).max(SEARCH_LIMIT)
+  })
 
-  if(!_query || typeof _query != "string")
+  try{
+    await schema.validateAsync(args)
+  }
+  catch(e){
+    console.log(e)
     return { errors: [ SearchRequestError.badRequest ] }
-
-  const _limit = args.limit || SEARCH_LIMIT
-
-  if(isNaN(_limit) ||  _limit > SEARCH_LIMIT)
-    return { errors: [ SearchRequestError.badRequest ] }
+  }
 
   let body: any = {
-    size: _limit,
+    size: args.limit || SEARCH_LIMIT,
     query: { 
       multi_match: {
-        query: _query,
+        query: args.query,
         fields: [ "name^2", "tags", "body^0.5", "author" ],
         fuzziness: "auto"
       }
@@ -47,28 +51,28 @@ export async function getArticleSearchResults(args): Promise<SearchResponse> {
 
 export async function getInterestingArticles(args): Promise<SearchResponse> {
 
+  const schema = Joi.object({
+    _id: Joi.string().required(),
+    exclude: Joi.array().items(Joi.string()).required(),
+    limit: Joi.number().integer().min(1).max(SEARCH_LIMIT),
+    page: Joi.number().integer().min(1)
+  })
+
+  try{
+    await schema.validateAsync(args)
+  }
+  catch(e){
+    console.log(e)
+    return { errors: [ SearchRequestError.badRequest ] }
+  }
+
   let response: SearchResponse = {};
 
-  const _id = args._id || null
-  let exclude = args.exclude || null
-
-  if(!_id || !exclude){
-    response.errors = [ SearchRequestError.missingArgs ]
-    return response;
-  }
-
-  if(typeof _id !== "string" || !Array.isArray(exclude) || exclude.some(a => typeof(a) != "string")){
-    response.errors = [ SearchRequestError.badRequest ]
-    return response;
-  }
+  const _id = args._id
+  let exclude = args.exclude
 
   const _limit = parseInt(args.limit || 25)
   const _from = (parseInt(args.page || 1) - 1) * _limit
-
-  if(isNaN(_limit) || isNaN(_from)){
-    response.errors = [ SearchRequestError.badRequest ]
-    return response;
-  }
 
   exclude.push(_id)
 
@@ -118,8 +122,6 @@ export async function getInterestingArticles(args): Promise<SearchResponse> {
     author: a._source.author,
     score: a._score
   }))
-
-  console.log(articles)
 
   response.data = { articles }
 

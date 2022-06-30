@@ -24,6 +24,8 @@ const _handler = async (body: SearchRequest): Promise<SearchResponse> => {
 
 export default async function handler(req: FastifyRequest, reply: FastifyReply){
 
+  await sleep(300);
+
   const startTime = performance.now()
 
   const _r = await (async (): Promise<SearchResponse> => {

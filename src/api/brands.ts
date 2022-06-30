@@ -1,27 +1,31 @@
 import { SearchRequestError, SearchResponse } from "../types";
 import { isValidStringArray } from '@sergei-gaponik/hedo2.lib.util'
 import { esHandler } from '../core/esHandler'
+import Joi = require("joi");
 
 const SEARCH_LIMIT = 10
 
 export async function getBrandSearchResults(args): Promise<SearchResponse> {
 
-  const _query = args.query || null
+  const schema = Joi.object({
+    query: Joi.string().required(),
+    limit: Joi.number().allow(null).integer().min(0).max(SEARCH_LIMIT)
+  })
 
-  if(!_query || typeof _query != "string")
+  try{
+    await schema.validateAsync(args)
+  }
+  catch(e){
+    console.log(e)
     return { errors: [ SearchRequestError.badRequest ] }
-
-  const _limit = args.limit || SEARCH_LIMIT
-
-  if(isNaN(_limit) ||  _limit > SEARCH_LIMIT)
-    return { errors: [ SearchRequestError.badRequest ] }
+  }
 
   let body: any = {
-    size: _limit,
+    size: args.limit || SEARCH_LIMIT,
     query: { 
       match: {
         name: {
-          query: _query,
+          query: args.query,
           fuzziness: "auto"
         }
       } 
@@ -42,21 +46,24 @@ export async function getBrandSearchResults(args): Promise<SearchResponse> {
 
 export async function getSeriesSearchResults(args): Promise<SearchResponse> {
 
-  const _query = args.query || null
+  const schema = Joi.object({
+    query: Joi.string().required(),
+    limit: Joi.number().allow(null).integer().min(0).max(SEARCH_LIMIT)
+  })
 
-  if(!_query || typeof _query != "string")
+  try{
+    await schema.validateAsync(args)
+  }
+  catch(e){
+    console.log(e)
     return { errors: [ SearchRequestError.badRequest ] }
-
-  const _limit = args.limit || SEARCH_LIMIT
-
-  if(isNaN(_limit) ||  _limit > SEARCH_LIMIT)
-    return { errors: [ SearchRequestError.badRequest ] }
+  }
 
   let body: any = {
-    size: _limit,
+    size: args.limit || SEARCH_LIMIT,
     query: { 
       multi_match: {
-        query: _query,
+        query: args.query,
         fields: [ "name^2", "brand" ],
         fuzziness: "auto"
       } 

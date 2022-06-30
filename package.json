@@ -2,17 +2,25 @@
   "scripts": {
     "watch": "nodemon --watch \"src/**\" --ext \"ts,json\" --ignore \"src/**/*.spec.ts\" --exec \"ts-node src/app.ts\"",
     "start": "ts-node src/app.ts",
-    "inspect": "node --inspect -r ts-node/register src/app.ts"
+    "inspect": "node --inspect -r ts-node/register src/app.ts",
+    "docker:build": "docker build . -t hedo2.shop.search",
+    "docker:run": "docker run -d -p $p:$p --env-file .docker.env hedo2.shop.search",
+    "docker:tag": "docker tag hedo2.shop.search:latest 493725010520.dkr.ecr.eu-central-1.amazonaws.com/hedo2.shop.search:latest",
+    "docker:push": "docker push 493725010520.dkr.ecr.eu-central-1.amazonaws.com/hedo2.shop.search:latest"
   },
   "dependencies": {
+    "@sergei-gaponik/hedo2.lib.models": "git+https://sergei-gaponik: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@github.com/sergei-gaponik/hedo2.lib.models",
+    "@sergei-gaponik/hedo2.lib.util": "git+https://sergei-gaponik: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@github.com/sergei-gaponik/hedo2.lib.util",
     "@elastic/elasticsearch": "^7.12.0",
     "@types/fastify-cors": "^2.1.0",
     "colors": "^1.4.0",
     "dotenv": "^8.2.0",
     "fastify": "^3.16.2",
     "fastify-compress": "^3.6.0",
+    "fastify-cookie": "^5.6.0",
     "fastify-cors": "^6.0.2",
     "isomorphic-fetch": "^3.0.0",
+    "joi": "^17.6.0",
     "module-alias": "^2.2.2",
     "mongoose": "^5.12.5",
     "node-fetch": "^2.6.1",
@@ -20,7 +28,8 @@
     "redis": "^3.1.1",
     "reflect-metadata": "^0.1.13",
     "type-graphql": "^1.1.1",
-    "urql": "^2.0.2"
+    "urql": "^2.0.2",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/express": "^4.17.11",
@@ -39,9 +48,5 @@
     "url": "git+https://github.com/sergei-gaponik/hedo2.shop.search.git"
   },
   "author": "HEDO Beauty",
-  "license": "UNLICENSED",
-  "_moduleAliases": {
-    "@sergei-gaponik/hedo2.lib.models": "../../_lib/models/dist/app.js",
-    "@sergei-gaponik/hedo2.lib.util": "../../_lib/util/dist/app.js"
-  }
+  "license": "UNLICENSED"
 }

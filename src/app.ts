@@ -1,6 +1,11 @@
-require("module-alias/register")
 require("reflect-metadata")
-require("dotenv").config()
+
+import { PRODUCTION, VERSION } from './core/const'
+
+if(!PRODUCTION){
+  require("dotenv").config()
+  // require("module-alias/register")
+}
 
 import 'isomorphic-fetch'
 import * as Mongoose from 'mongoose'
@@ -11,7 +16,6 @@ import { cyan, bold, yellow, blue} from 'colors/safe'
 import { setContext } from './core/context'
 import handler from './core/handler'
 import systemHandler from './core/systemHandler'
-import { PRODUCTION, VERSION } from './core/const'
 import { initConsole } from '@sergei-gaponik/hedo2.lib.util'
 import * as es from '@elastic/elasticsearch'
 

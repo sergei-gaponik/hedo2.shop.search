@@ -1,8 +1,8 @@
 FROM node:16 AS appbuild
 WORKDIR /usr/src/app
+RUN npm install -g typescript@4.3.5
 COPY package.json ./
 RUN npm install
-RUN npm install -g typescript@4.3.5
 COPY . .
 RUN tsc --skipLibCheck
 

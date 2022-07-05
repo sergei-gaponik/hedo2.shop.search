@@ -82,8 +82,6 @@ export async function deleteBrandsIndex(): Promise<SearchResponse> {
 
 export async function createBrandsIndex(): Promise<SearchResponse> {
 
-  const body = await fs.promises.readFile(path.join(__dirname, "./es_mappings/brands.json"))
-
   const r = await context().esClient.indices.create({ 
     index: "brands", 
     body: brandsMapping

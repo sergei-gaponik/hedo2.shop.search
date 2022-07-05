@@ -1,8 +1,11 @@
 import { SearchResponse } from "../types";
 import { queryAll } from '@sergei-gaponik/hedo2.lib.util'
 import esIndex from '../core/esIndex'
+import { context } from "../core/context";
+import * as fs from "fs"
+import * as path from 'path'
 
-async function indexPages(args): Promise<SearchResponse> {
+export async function indexPages(args): Promise<SearchResponse> {
 
   const gql = `
     query GetPagesForIndexing($limit: Float!, $page: Float!){
@@ -32,6 +35,20 @@ async function indexPages(args): Promise<SearchResponse> {
   return await esIndex('pages', esPages)
 }
 
-export {
-  indexPages
+export async function deletePagesIndex(): Promise<SearchResponse> {
+
+  const r = await context().esClient.indices.delete({ index: "pages" })
+  console.log(r)
+
+  return {}
+}
+
+export async function createPagesIndex(): Promise<SearchResponse> {
+
+  const body = await fs.promises.readFile(path.join(__dirname, "./es_mappings/pages.json"))
+
+  const r = await context().esClient.indices.create({ index: "pages", body })
+  console.log(r)
+
+  return {}
 }

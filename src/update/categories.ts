@@ -2,6 +2,9 @@ import { SearchResponse } from "../types";
 import { queryAll } from '@sergei-gaponik/hedo2.lib.util'
 import { keywordMatchesProperties } from '../util/keywords'
 import esIndex from '../core/esIndex'
+import * as fs from "fs"
+import * as path from 'path'
+import { context } from "../core/context";
 
 export async function indexCategories(args): Promise<SearchResponse> {
 
@@ -85,4 +88,22 @@ export async function indexCategories(args): Promise<SearchResponse> {
     throw new Error();
 
   return await esIndex('categories', esCategories)
+}
+
+export async function deleteCategoriesIndex(): Promise<SearchResponse> {
+
+  const r = await context().esClient.indices.delete({ index: "categories" })
+  console.log(r)
+
+  return {}
+}
+
+export async function createCategoriesIndex(): Promise<SearchResponse> {
+
+  const body = await fs.promises.readFile(path.join(__dirname, "./es_mappings/categories.json"))
+
+  const r = await context().esClient.indices.create({ index: "categories", body })
+  console.log(r)
+
+  return {}
 }

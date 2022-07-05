@@ -3,6 +3,8 @@ import { context } from '../core/context'
 import { queryAll } from '@sergei-gaponik/hedo2.lib.util'
 import { clearCache } from '../core/esHandler'
 import esIndex from '../core/esIndex'
+import * as fs from "fs"
+import * as path from 'path'
 
 export async function indexBrands(args): Promise<SearchResponse> {
 
@@ -67,4 +69,22 @@ export async function indexSeries(args): Promise<SearchResponse> {
   })
 
   return await esIndex('series', esSeries)
+}
+
+export async function deleteBrandsIndex(): Promise<SearchResponse> {
+
+  const r = await context().esClient.indices.delete({ index: "brands" })
+  console.log(r)
+
+  return {}
+}
+
+export async function createBrandsIndex(): Promise<SearchResponse> {
+
+  const body = await fs.promises.readFile(path.join(__dirname, "./es_mappings/brands.json"))
+
+  const r = await context().esClient.indices.create({ index: "brands", body })
+  console.log(r)
+
+  return {}
 }

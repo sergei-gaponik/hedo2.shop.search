@@ -1,11 +1,7 @@
-{
+export default {
   "mappings": {
     "properties": {
-      "name": {
-        "type": "text",
-        "analyzer": "german"
-      },
-      "brand": {
+      "title": {
         "type": "text",
         "analyzer": "german"
       }

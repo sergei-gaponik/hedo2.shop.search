@@ -5,6 +5,7 @@ import { clearCache } from '../core/esHandler'
 import esIndex from '../core/esIndex'
 import * as fs from "fs"
 import * as path from 'path'
+import brandsMapping from './mappings/brands'
 
 export async function indexBrands(args): Promise<SearchResponse> {
 
@@ -83,7 +84,10 @@ export async function createBrandsIndex(): Promise<SearchResponse> {
 
   const body = await fs.promises.readFile(path.join(__dirname, "./es_mappings/brands.json"))
 
-  const r = await context().esClient.indices.create({ index: "brands", body })
+  const r = await context().esClient.indices.create({ 
+    index: "brands", 
+    body: brandsMapping
+  })
   console.log(r)
 
   return {}

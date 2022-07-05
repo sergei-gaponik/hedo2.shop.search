@@ -4,6 +4,7 @@ import esIndex from '../core/esIndex'
 import * as fs from "fs"
 import * as path from 'path'
 import { context } from "../core/context";
+import articlesMapping from './mappings/articles'
 
 export async function indexArticles(args): Promise<SearchResponse> {
 
@@ -56,9 +57,11 @@ export async function deleteArticlesIndex(): Promise<SearchResponse> {
 
 export async function createArticlesIndex(): Promise<SearchResponse> {
 
-  const body = await fs.promises.readFile(path.join(__dirname, "./es_mappings/articles.json"))
+  const r = await context().esClient.indices.create({ 
+    index: "articles", 
+    body: articlesMapping
+  })
 
-  const r = await context().esClient.indices.create({ index: "articles", body })
   console.log(r)
 
   return {}

@@ -1,4 +1,4 @@
-{
+export default {
   "mappings": {
     "properties": {
       "brandHandle": {

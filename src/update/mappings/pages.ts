@@ -1,7 +1,7 @@
-{
+export default {
   "mappings": {
     "properties": {
-      "title": {
+      "aliases": {
         "type": "text",
         "analyzer": "german"
       }

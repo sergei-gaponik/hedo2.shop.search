@@ -5,8 +5,7 @@ import { clearCache } from '../core/esHandler'
 import { keywordMatchesProperties, getElasticProperties } from '../util/keywords'
 import esIndex from '../core/esIndex'
 import { Variant } from '@sergei-gaponik/hedo2.lib.models'
-import * as fs from "fs";
-import * as path from 'path'
+import productsMapping from './mappings/products'
 
 function getMaxDiscount(variants: Variant[]){
 
@@ -172,9 +171,11 @@ export async function deleteProductsIndex(): Promise<SearchResponse> {
 
 export async function createProductsIndex(): Promise<SearchResponse> {
 
-  const body = await fs.promises.readFile(path.join(__dirname, "./es_mappings/products.json"))
 
-  const r = await context().esClient.indices.create({ index: "products", body })
+  const r = await context().esClient.indices.create({ 
+    index: "products", 
+    body: productsMapping 
+  })
   console.log(r)
 
   return {}
